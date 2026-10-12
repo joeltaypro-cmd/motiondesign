@@ -776,7 +776,7 @@ P.P45 = (t, tf, pl) => {
 };
 
 // exposition propre aux gros plans clairs (papier, mots tenus) : pas de plan beaucoup plus clair que ses voisins
-const EXPO = { P19: 0.78, P22: 0.62, P27: 0.78, P39: 0.68 };
+const EXPO = { P19: 0.78, P22: 0.62, P27: 0.78, P39: 0.52 };
 
 // passes supplémentaires pour les plans aux mouvements très rapides
 const PASSES = {
