@@ -1,0 +1,28 @@
+#!/usr/bin/env node
+// node tools/encode/encode probe <fichier>       : définition, cadence, durée, piste son, débit, taille
+// node tools/encode/encode web <maitre> <sortie> : version web (H.264 12 Mbit/s, 1080p60, son AAC 192k)
+import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const [cmd, a, b] = process.argv.slice(2);
+if (cmd === 'probe') {
+  const j = JSON.parse(execFileSync('ffprobe', ['-v', 'error', '-show_format', '-show_streams', '-count_frames', '-of', 'json', a], { encoding: 'utf8' }));
+  const v = j.streams.find((s) => s.codec_type === 'video'), s = j.streams.find((x) => x.codec_type === 'audio');
+  const taille = fs.statSync(a).size;
+  console.log(`${path.basename(a)}`);
+  console.log(`  vidéo : ${v.codec_name} ${v.profile || ''} ${v.width}x${v.height} ${v.pix_fmt}, ${v.r_frame_rate} i/s, ${v.nb_read_frames} images, durée ${(+v.duration).toFixed(3)} s, ${(v.bit_rate / 1e6).toFixed(2)} Mbit/s`);
+  console.log(s ? `  son   : ${s.codec_name} ${s.sample_rate} Hz ${s.channels} canaux, durée ${(+s.duration).toFixed(3)} s, ${(s.bit_rate / 1e3).toFixed(0)} kbit/s` : '  son   : AUCUNE PISTE');
+  console.log(`  conteneur : durée ${(+j.format.duration).toFixed(3)} s, ${(j.format.bit_rate / 1e6).toFixed(2)} Mbit/s, ${(taille / 1e6).toFixed(1)} Mo`);
+} else if (cmd === 'web') {
+  const log = path.join(os.tmpdir(), `web-${process.pid}`);
+  const commun = ['-hide_banner', '-loglevel', 'error', '-y', '-i', a, '-map', '0:v:0', '-c:v', 'libx264', '-preset', 'slow', '-profile:v', 'high', '-pix_fmt', 'yuv420p',
+    '-b:v', '12M', '-maxrate', '15M', '-bufsize', '24M', '-x264-params', 'keyint=60:min-keyint=60', '-r', '60', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709'];
+  execFileSync('ffmpeg', [...commun, '-pass', '1', '-passlogfile', log, '-an', '-f', 'mp4', '/dev/null'], { stdio: 'inherit' });
+  execFileSync('ffmpeg', [...commun, '-map', '0:a:0?', '-c:a', 'aac', '-b:a', '192k', '-pass', '2', '-passlogfile', log, '-t', '20', '-movflags', '+faststart', b], { stdio: 'inherit' });
+  for (const f of fs.readdirSync(os.tmpdir())) if (f.startsWith(path.basename(log))) fs.rmSync(path.join(os.tmpdir(), f), { force: true });
+  console.log('écrit', b);
+} else {
+  console.log('usage : encode probe <fichier> | encode web <maitre> <sortie>');
+}

@@ -1,0 +1,5 @@
+rendu/
+essais/
+node_modules/
+*.partiel.mkv
+__pycache__/

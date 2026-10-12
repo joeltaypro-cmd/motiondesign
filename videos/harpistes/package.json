@@ -1,0 +1,6 @@
+{
+  "name": "lancement-ecole-des-harpistes",
+  "private": true,
+  "type": "module",
+  "description": "Vidéo de lancement de l'École des harpistes, fabriquée par code (voir NOTICE.md)"
+}

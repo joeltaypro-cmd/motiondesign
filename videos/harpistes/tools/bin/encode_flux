@@ -1,0 +1,26 @@
+#!/usr/bin/env node
+// Assemble les segments rendus et encode la vidéo en H.264 (deux passes, débit visé).
+//   node tools/bin/encode_flux --dossier rendu/seg-1080 --sortie rendu/video.mp4 [--debit 16M]
+import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+const arg = (n, d) => { const i = process.argv.indexOf('--' + n); return i > 0 ? process.argv[i + 1] : d; };
+const dossier = path.resolve(arg('dossier', 'rendu/seg-1080'));
+const sortie = path.resolve(arg('sortie', 'rendu/video.mp4'));
+const debit = arg('debit', '16M');
+const segs = fs.readdirSync(dossier).filter((f) => /^seg_\d+\.mkv$/.test(f)).sort();
+if (!segs.length) { console.error('aucun segment dans', dossier); process.exit(1); }
+const liste = path.join(os.tmpdir(), `segments-${process.pid}.txt`);
+fs.writeFileSync(liste, segs.map((f) => `file '${path.join(dossier, f).replace(/'/g, "'\\''")}'`).join('\n'));
+const max = (parseFloat(debit) * 1.25) + 'M', tampon = (parseFloat(debit) * 2) + 'M';
+const commun = ['-hide_banner', '-loglevel', 'error', '-y', '-f', 'concat', '-safe', '0', '-i', liste,
+  '-c:v', 'libx264', '-preset', 'slow', '-profile:v', 'high', '-pix_fmt', 'yuv420p', '-r', '60',
+  '-b:v', debit, '-maxrate', max, '-bufsize', tampon, '-x264-params', 'keyint=60:min-keyint=60', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709'];
+const log = path.join(os.tmpdir(), `x264-${process.pid}`);
+execFileSync('ffmpeg', [...commun, '-pass', '1', '-passlogfile', log, '-an', '-f', 'mp4', os.devNull === '/dev/null' ? '/dev/null' : 'NUL'], { stdio: 'inherit' });
+execFileSync('ffmpeg', [...commun, '-pass', '2', '-passlogfile', log, '-an', '-movflags', '+faststart', sortie], { stdio: 'inherit' });
+for (const f of fs.readdirSync(os.tmpdir())) if (f.startsWith(path.basename(log))) fs.rmSync(path.join(os.tmpdir(), f), { force: true });
+fs.rmSync(liste, { force: true });
+console.log('écrit', sortie, `(${segs.length} segments, ${debit})`);

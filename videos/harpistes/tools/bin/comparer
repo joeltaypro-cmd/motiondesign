@@ -1,0 +1,9 @@
+#!/usr/bin/env node
+// Compare la version web au maître (SSIM et PSNR moyens, image par image).
+//   node tools/bin/comparer <web.mp4> <maitre.mp4>
+import { spawnSync } from 'node:child_process';
+const [web, maitre] = process.argv.slice(2);
+const r = spawnSync('ffmpeg', ['-hide_banner', '-i', web, '-i', maitre, '-lavfi', '[0:v][1:v]ssim;[0:v][1:v]psnr', '-f', 'null', '-'], { encoding: 'utf8' });
+const ssim = (r.stderr.match(/SSIM .*All:([\d.]+) \(([\d.inf]+)\)/) || []);
+const psnr = (r.stderr.match(/PSNR .*average:([\d.inf]+) min:([\d.inf]+)/) || []);
+console.log(`SSIM moyen ${ssim[1] || '?'} (${ssim[2] || '?'} dB) ; PSNR moyen ${psnr[1] || '?'} dB, minimum ${psnr[2] || '?'} dB`);

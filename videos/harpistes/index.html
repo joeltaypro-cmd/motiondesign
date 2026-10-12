@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>École des harpistes — lancement</title>
+<style>html,body{margin:0;background:#000;overflow:hidden}canvas{display:block}</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script type="module">
+// La vidéo est une fonction pure du temps : __seek(t) dessine l'instant t, de façon synchrone.
+import { Moteur } from './scene/moteur.js';
+import { chargerRessources } from './scene/base.js';
+import { DUREE, SCENE_W, SCENE_H, IPS } from './scene/cues.js';
+
+const q = new URLSearchParams(location.search);
+const L = +(q.get('w') || SCENE_W), H = +(q.get('h') || SCENE_H);
+const PASSES = +(q.get('passes') || 24);
+window.SCENE_W = SCENE_W; window.SCENE_H = SCENE_H; window.DUREE = DUREE;
+try {
+  await chargerRessources('');
+  const { film } = await import('./scene/' + (q.get('film') || 'film') + '.js');
+  const m = new Moteur(document.getElementById('c'), L, H, q.get('defs') || '');
+  window.__plan = (t) => film.plan(t).id;
+  window.__seek = (t) => {
+    const pl = film.plan(t);
+    m.rendre((ts) => film.scene(ts, pl, t), t, { passes: Math.max(1, Math.round(PASSES * (pl.passes || 1))), tMin: pl.debut, tMax: pl.fin - 1e-4, image: Math.round(t * IPS) });
+    return pl.id;
+  };
+  window.__pixels = () => {
+    const px = m.pixels();
+    let s = '';
+    for (let i = 0; i < px.length; i += 0x8000) s += String.fromCharCode.apply(null, px.subarray(i, i + 0x8000));
+    return btoa(s);
+  };
+  window.__ready = true;
+} catch (e) {
+  window.__erreur = String(e && e.stack || e);
+  console.error(window.__erreur);
+}
+</script>
+</body>
+</html>

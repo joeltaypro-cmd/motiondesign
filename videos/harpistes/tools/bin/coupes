@@ -1,0 +1,25 @@
+#!/usr/bin/env node
+// Mesure image par image : luminosité moyenne et différence avec l'image précédente (en petit, en niveaux de gris).
+//   node tools/bin/coupes <video.mp4> [sortie.json]
+import { spawn } from 'node:child_process';
+import fs from 'node:fs';
+
+const [video, sortie = 'rendu/coupes.json'] = process.argv.slice(2);
+const L = 192, H = 108, T = L * H;
+const ff = spawn('ffmpeg', ['-v', 'error', '-i', video, '-vf', `scale=${L}:${H}:flags=area,format=gray`, '-f', 'rawvideo', '-'], { stdio: ['ignore', 'pipe', 'inherit'] });
+let reste = Buffer.alloc(0), prec = null;
+const images = [];
+ff.stdout.on('data', (d) => {
+  reste = Buffer.concat([reste, d]);
+  while (reste.length >= T) {
+    const im = reste.subarray(0, T); reste = reste.subarray(T);
+    let s = 0, diff = 0, ident = true;
+    for (let i = 0; i < T; i++) { s += im[i]; if (prec) { const e = Math.abs(im[i] - prec[i]); diff += e; if (e) ident = false; } }
+    images.push({ i: images.length, lum: +(s / T).toFixed(2), diff: prec ? +(diff / T).toFixed(3) : null, identique: prec ? ident : false });
+    prec = Buffer.from(im);
+  }
+});
+ff.on('exit', () => {
+  fs.writeFileSync(sortie, JSON.stringify(images));
+  console.log(`${images.length} images mesurées -> ${sortie}`);
+});
