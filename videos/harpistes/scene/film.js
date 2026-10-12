@@ -707,8 +707,10 @@ P.P34 = (t, tf, pl) => {
   };
 };
 P.P35 = (t, tf, pl) => ({
-  cam: travelling(pl, t, cam([-0.61, 0.27, 0.59], [-0.66, 0.006, 0.24], 30, { ouverture: 0.003 }), cam([-0.61, 0.27, 0.59], [-0.66, 0.006, 0.24], 30, { ouverture: 0.003 })),
+  cam: travelling(pl, t, cam([-0.5, 0.1, 0.44], [-0.67, 0.004, 0.235], 30, { ouverture: 0.0006 }), cam([-0.5, 0.1, 0.44], [-0.67, 0.004, 0.235], 30, { ouverture: 0.0006 })),
   boites: monde(t, tf, { plaques: ['A', 'B'] }),
+  // lumière d'appoint chaude, derrière la caméra : elle dessine le bord du téléphone éteint
+  extra: [{ p: [-0.36, 0.2, 0.66], couleur: hex('#ffb07a'), i: 0.12, rayon: 0.05, ombre: false }],
   calme: true,
 });
 P.P36 = (t, tf, pl) => ({
@@ -789,7 +791,7 @@ function scene(t, pl, tf = t) {
   const fn = P[pl.id];
   if (!fn) throw new Error('Plan manquant : ' + pl.id);
   const s = fn(t, tf, pl);
-  const amb = ambiance(t, { cle: s.final ? [2.2, 3.4, 13] : undefined, cleI: s.final ? 22 : undefined });
+  const amb = ambiance(t, { cle: s.final ? [2.2, 3.4, 13] : undefined, cleI: s.final ? 22 : undefined, extra: s.extra });
   const gainSecousse = s.calme ? 0.3 : 1;
   let c = secousse(s.cam, t, gainSecousse);
   const fl = eclair(t);
