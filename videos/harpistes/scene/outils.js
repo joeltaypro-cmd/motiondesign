@@ -38,7 +38,8 @@ export function secousse(cam, t, gain = 1) {
   const z = norm(sub(cam.cible, cam.pos));
   const x = norm(cross(z, [0, 1, 0]));
   const y = cross(x, z);
-  const dist = Math.hypot(...sub(cam.cible, cam.pos));
+  // l'amplitude suit la distance du sujet (mise au point), plafonnée : un coup ne doit pas dédoubler l'image
+  const dist = Math.min(cam.focus ?? Math.hypot(...sub(cam.cible, cam.pos)), 2.5);
   const k = dist * 0.012;
   const dep = add(add(mul(z, pousse * dist * 0.035), mul(x, sx * k)), mul(y, sy * k));
   return { ...cam, pos: add(cam.pos, dep), cible: add(cam.cible, add(mul(x, sx * k * 0.6), mul(y, sy * k * 0.6))), roulis: (cam.roulis || 0) + rl * 0.5 };

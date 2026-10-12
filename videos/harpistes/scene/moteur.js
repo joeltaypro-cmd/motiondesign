@@ -402,7 +402,7 @@ void main(){
   vec2 uv = gl_FragCoord.xy / uRes;
   vec3 c = texelFetch(uAcc, ivec2(gl_FragCoord.xy), 0).rgb / uN;
   c += texture(uHalo, uv).rgb * uPost.y;
-  c += uFlash.rgb * uFlash.a;
+  c += c * uFlash.rgb * uFlash.a * 6.0 + uFlash.rgb * uFlash.a * 0.12;
   c *= uPost.x;
   c = aces(c);
   vec2 q = (uv - 0.5) * vec2(1.0, 0.82);

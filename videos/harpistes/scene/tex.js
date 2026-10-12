@@ -58,11 +58,12 @@ enregistrer('tuto', (ctx, W, H, p) => {
   // l'amas : huit notes qui tombent ensemble sur le clavier
   if (p.amas > 0) {
     const cols = [6, 8, 9, 11, 13, 14, 16, 18];
-    const yy = mix(y0 - h * 0.3, kb - h * 0.22, clamp(p.amas));
-    for (const c of cols) { ctx.fillStyle = '#f2f2f4'; rr(ctx, x0 + c * kw + kw * 0.1, yy, kw * 0.8, h * 0.22, kw * 0.2); ctx.fill(); }
+    const yy = p.amas <= 1 ? mix(y0 - h * 0.3, kb - h * 0.22, p.amas) : kb - h * 0.22 + (p.amas - 1) * h * 0.24;
+    const hh = Math.max(0, Math.min(h * 0.22, kb - yy));
+    if (hh > 0) for (const c of cols) { ctx.fillStyle = '#f2f2f4'; rr(ctx, x0 + c * kw + kw * 0.1, yy, kw * 0.8, hh, Math.min(kw * 0.2, hh / 2)); ctx.fill(); }
   }
   // clavier du tuto
-  const allumees = p.amas >= 1 ? [6, 8, 9, 11, 13, 14, 16, 18] : [Math.floor(k * 9) % nb, Math.floor(k * 13 + 5) % nb];
+  const allumees = p.amas >= 1 && p.amas < 1.85 ? [6, 8, 9, 11, 13, 14, 16, 18] : [Math.floor(k * 9) % nb, Math.floor(k * 13 + 5) % nb];
   clavierDessin(ctx, x0, kb, w, h * 0.28, { nb, allumees, couleurAllumee: '#ffffff', blanc: '#b4b4ba', noir: '#141416', fond: '#18181b' });
   // dégradé de lecture et titre
   const g = ctx.createLinearGradient(0, y0, 0, y0 + h * 0.3); g.addColorStop(0, 'rgba(0,0,0,0.75)'); g.addColorStop(1, 'rgba(0,0,0,0)');
@@ -156,7 +157,7 @@ enregistrer('carnetPage', (ctx, W, H, p) => {
   ctx.restore();
 });
 function DESSIN_CARNET_OUVERT(ctx, W, H, p) {
-  ctx.fillStyle = '#9b958a'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#7b766d'; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.fillRect(W * 0.49, 0, W * 0.02, H);
   const encre = '#23222a';
   texte(ctx, 'Chant de louange', W * 0.05, H * 0.15, { taille: H * 0.085, poids: 700, police: MAIN, couleur: encre });
@@ -187,7 +188,7 @@ enregistrer('clavier', (ctx, W, H, p) => {
   const allumees = p.allumees || [];
   for (let i = 0; i < nb; i++) {
     const on = allumees.includes(i);
-    ctx.fillStyle = on ? ACC : (p.gris ? '#8e8e93' : '#a8a49d');
+    ctx.fillStyle = on ? ACC : (p.gris ? '#8e8e93' : '#9a968f');
     ctx.fillRect(i * kw + kw * 0.04, y0, kw * 0.92, kh);
     if (on) { ctx.fillStyle = 'rgba(255,220,190,0.5)'; ctx.fillRect(i * kw + kw * 0.04, y0 + kh * 0.75, kw * 0.92, kh * 0.25); }
   }
@@ -298,7 +299,7 @@ export function bandeau(ctx, x, y, titre, n, total, { gris = false, accent = 1, 
   const W = 920, H = 102;
   ctx.fillStyle = '#1c1c1e'; ctx.fillRect(x, y, W, H);
   const f = remplissage ?? n / total;
-  if (f > 0 && !gris) { ctx.fillStyle = acc(Math.min(0.75, 0.42 * accent)); ctx.fillRect(x, y, W * f, H); }
+  if (f > 0 && !gris) { ctx.fillStyle = acc(Math.min(0.6, 0.38 * accent)); ctx.fillRect(x, y, W * f, H); }
   ctx.fillStyle = '#2c2c2e'; ctx.fillRect(x, y, W, 2); ctx.fillRect(x, y + H - 2, W, 2);
   chevronHaut(ctx, x + 66, y + H / 2, 15, '#d8d8dc');
   texte(ctx, titre, x + 113, y + 66, { taille: 46, poids: 700, couleur: '#f4f2ee', max: 640 });
@@ -362,7 +363,7 @@ enregistrer('disqueLecture', (ctx, W, H) => {
 
 // L'annexe manuscrite (même dessin des deux côtés)
 enregistrer('annexe', (ctx, W, H) => {
-  ctx.fillStyle = '#a49c8e'; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = '#857e72'; ctx.fillRect(0, 0, W, H);
   ctx.fillStyle = ACC; ctx.fillRect(0, 0, W, H * 0.035);
   const encre = '#24232b';
   texte(ctx, 'Annexe', W * 0.08, H * 0.12, { taille: H * 0.055, poids: 700, couleur: '#5a5148' });

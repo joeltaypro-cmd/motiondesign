@@ -53,7 +53,7 @@ function touches(i0, i1, allumees = [], enfoncees = {}) {
     const on = allumees.includes(i), dz = enfoncees[i] || 0;
     out.push(boite({
       p: [xTouche(i), HAUT + 0.006 - dz, 0.077], rot: aPlat(0), d: [1 / 36 - 0.0012, 0.134, 0.012], r: 0.0015,
-      tex: on ? TX('uni', { c: C.accent }, 8, 8) : undefined, emit: 2.2, couleur: hex('#d9d5cd'), brillance: 0.6, vernis: 0.15,
+      tex: on ? TX('uni', { c: C.accent }, 8, 8) : undefined, emit: 1.6, couleur: hex('#aaa69f'), brillance: 0.6, vernis: 0.15,
     }));
     if (i < i1 && NOIRES(i)) {
       out.push(boite({ p: [xTouche(i) + 1 / 72, HAUT + 0.014, 0.047], rot: aPlat(0), d: [0.0145, 0.078, 0.02], r: 0.002, couleur: hex('#0e0e10'), brillance: 0.75, vernis: 0.3 }));
@@ -103,12 +103,12 @@ function poseTel(t) {
 }
 function ecranTuto(tf) {
   const te = tEff(tf);
-  const amas = te < 0.3 ? 0 : te < 0.95 ? clamp((te - 0.3) / 0.2) : 0;
+  const amas = te < 0.3 ? 0 : te < 0.5 ? (te - 0.3) / 0.2 : Math.min(2, 1 + (te - 0.5) / 0.35);
   return { k: img(te), titre: TITRE_TUTO, vitesse: te >= TM(2, 3, 2 / 3) ? 2 : 1, amas: +amas.toFixed(3), pause: te >= K.fige, eteint: tf >= K.chute };
 }
 function telephone(t, tf) {
   const b = poseTel(t);
-  return boite({ ...b, r: 0.011, tex: TX('tuto', ecranTuto(tf), 1280, 620), emit: 1.05, couleur: hex('#0b0b0d'), brillance: 0.92, vernis: 0.55 });
+  return boite({ ...b, r: 0.011, tex: TX('tuto', ecranTuto(tf), 1280, 620), emit: 0.72, couleur: hex('#0b0b0d'), brillance: 0.92, vernis: 0.55 });
 }
 // lumière de l'écran sur le clavier et le badge
 function lumiereEcran(t, tf) {
@@ -233,7 +233,7 @@ function plaque(m, t, tf, o = {}) {
   const pose = o.pose || posePlaque(m, t);
   return boite({
     ...pose, d: [PL_L, PL_H, PL_E], r: 0.03, type: 'verre',
-    tex: TX('plaque', etatPlaque(m, tf, o), 1000, Math.round(1000 * PLAQUE.H / PLAQUE.L)), emit: mix(0.9, 1.15, chaleur(t)),
+    tex: TX('plaque', etatPlaque(m, tf, o), 1000, Math.round(1000 * PLAQUE.H / PLAQUE.L)), emit: mix(0.8, 1.0, chaleur(t)),
     couleur: hex('#a9b3c6'), opacite: 1,
   });
 }
@@ -290,15 +290,14 @@ function poseFil(t) {
   const pDet = point(base, [0, 0.01 * prog(K.detache, K.vol, t), avance]);
   if (t < K.vol) return { p: pDet, rot: base.rot };
   const pV = point(base, [0, 0.01, 0.07 + 0.12]);
-  const k = prog(K.vol, K.logo, t);
-  const kk = E.inout3(k);
-  const ctrl = add(pV, [0.0, 0.9, 3.2]);
-  return { p: bezier(pV, ctrl, LOGO_POS, kk), rot: rotEntre(base.rot, LOGO_ROT, E.inout2(prog(K.vol, K.logo - 0.1, t))) };
+  const kk = E.inout3(prog(K.vol, K.logo - 0.2, t));
+  const ctrl = add(lerp3(pV, LOGO_POS, 0.5), [0.0, 0.5, 0]);
+  return { p: bezier(pV, ctrl, LOGO_POS, kk), rot: rotEntre(base.rot, LOGO_ROT, E.inout2(prog(K.vol, K.logo - 0.15, t))) };
 }
 function fil(t, tf) {
   const pose = poseFil(t);
   if (t < K.detache) {
-    return boite({ ...pose, d: FIL_D, r: 0.012, tex: texFil(tf), emit: 1.05, couleur: hex('#26180f'), brillance: 0.85, vernis: 0.3, sansOmbre: true });
+    return boite({ ...pose, d: FIL_D, r: 0.012, tex: texFil(tf), emit: 0.9, couleur: hex('#26180f'), brillance: 0.85, vernis: 0.3, sansOmbre: true });
   }
   // détaché : une découpe en relief qui devient le H
   const u = +morph(tf).toFixed(3);
@@ -311,7 +310,7 @@ function ligneHD(m, si, li, t, tf) {
   const [titre, duree] = MODULES[m].sections[si].lecons[li];
   const e = { gris: tf < K.couleur, ...(etatPlaque(m, tf).etats[`${si}-${li}`] || {}) };
   const pose = dans(posePlaque(m, t), { p: [0, yLocal(d.y + 114.5), PL_E / 2 + 0.0016] });
-  return boite({ ...pose, d: [880 * U, 229 * U, 0.002], r: 0.01, tex: TX('ligne', { titre, duree, e }, 2640, 687), emit: 1.05, couleur: hex('#000000'), sansOmbre: true });
+  return boite({ ...pose, d: [880 * U, 229 * U, 0.002], r: 0.01, tex: TX('ligne', { titre, duree, e }, 2640, 687), emit: 0.92, couleur: hex('#000000'), sansOmbre: true });
 }
 function bandeauHD(m, si, t, tf) {
   const d = disposition(MODULES[m]).sections.find((s) => s.si === si);
@@ -320,12 +319,8 @@ function bandeauHD(m, si, t, tf) {
   const n = et.compteurs[si] || 0;
   // le remplissage suit le compteur, en glissant
   let remplissage = n / s.total;
-  if (m === 'A' && si === 0) {
-    const dernier = [...K.lignes].reverse().find((tl) => tf >= tl);
-    if (dernier !== undefined) remplissage = mix((n - 1) / s.total, n / s.total, E.out3(prog(dernier, dernier + 0.12, tf)));
-  }
   const pose = dans(posePlaque(m, t), { p: [0, yLocal(d.y + 51), PL_E / 2 + 0.0016] });
-  return boite({ ...pose, d: [920 * U, 102 * U, 0.002], tex: TX('bandeau', { titre: s.titre, n, total: s.total, gris: et.gris, fort: et.fort, remplissage: +remplissage.toFixed(3) }, 2760, 306), emit: 1.05, couleur: hex('#000000'), sansOmbre: true });
+  return boite({ ...pose, d: [920 * U, 102 * U, 0.002], tex: TX('bandeau', { titre: s.titre, n, total: s.total, gris: et.gris, fort: et.fort, remplissage: +remplissage.toFixed(3) }, 2760, 306), emit: 0.92, couleur: hex('#000000'), sansOmbre: true });
 }
 
 // ---------------------------------------------------------------- les gestes
@@ -373,7 +368,7 @@ function poseAnnexe(t) {
 function annexe(t) {
   const a = poseAnnexe(t);
   if (a.s < 0.18) return null;
-  return boite({ p: a.p, rot: a.rot, d: [ANNEXE_D[0] * a.s, ANNEXE_D[1] * a.s, ANNEXE_D[2]], tex: TX('annexe', {}, 520, 720), dos: 'meme', eclairee: true, couleur: hex('#a49c8e'), brillance: 0.3 });
+  return boite({ p: a.p, rot: a.rot, d: [ANNEXE_D[0] * a.s, ANNEXE_D[1] * a.s, ANNEXE_D[2]], tex: TX('annexe', {}, 520, 720), dos: 'meme', eclairee: true, couleur: hex('#7f786d'), brillance: 0.3 });
 }
 // la coche : part du clavier, frappe la leçon
 const PUCE3_L = [(331 + 64 + 12 + 150 + 12 + 210 - 440) * U, 0, 0];
@@ -447,7 +442,7 @@ function signature(t, tf) {
     const dist = mix(D_LOGO + 0.08, D_LOGO + 0.03, kn);
     const y = mix(275, 570, kn);
     const w = tailleMonde(cam, 1100, dist), h = tailleMonde(cam, 115, dist);
-    out.push(boite({ p: versEcran(cam, 960, y, dist), rot: LOGO_ROT, d: [w, h, 0.006], type: 'decoupe', tex: TX('nom', { revele: +E.out2(clamp(kn * 1.15)).toFixed(3) }, 2200, 230), emit: 1.15, couleur: hex('#8a8784'), brillance: 0.6, sansOmbre: true }));
+    out.push(boite({ p: versEcran(cam, 960, y, dist), rot: LOGO_ROT, d: [w, h, 0.006], type: 'decoupe', tex: TX('nom', { revele: +clamp(E.in2(kn) * 1.05).toFixed(3) }, 2200, 230), emit: 1.15, couleur: hex('#8a8784'), brillance: 0.6, sansOmbre: true }));
   }
   // le bouton arrive par le bas
   const kb = prog(K.bouton[0], K.bouton[1], t);
@@ -552,7 +547,7 @@ P.P10 = (t, tf, pl) => {
   const tel = poseTel(t);
   return {
     cam: travelling(pl, t, camDans(tel, [0.05, 0.016, 0.075], [0.05, 0.016, 0], 30, { ouverture: 0.001 }), camDans(tel, [0.05, 0.016, 0.068], [0.05, 0.016, 0], 30, { ouverture: 0.001 })),
-    boites: [...bureau(t, tf, { notes: true }), ...cartesEnVol(t)],
+    boites: [...bureau(t, tf, { notes: true }), ...cartesEnVol(t, (c) => c.t0 < 3.3)],
   };
 };
 P.P11 = (t, tf, pl) => {
@@ -630,7 +625,7 @@ P.P21 = (t, tf, pl) => {
 P.P22 = (t, tf, pl) => {
   const r = repereFilPlaque(K.annexeRangee);
   return {
-    cam: travelling(pl, t, camDans(r, [-0.2, 0.005, 0.2], [-0.2, 0.005, 0], 30, { ouverture: 0.002 }), camDans(r, [-0.205, 0.005, 0.185], [-0.205, 0.005, 0], 30, { ouverture: 0.002 })),
+    cam: travelling(pl, t, camDans(r, [-0.16, 0.02, 0.27], [-0.17, 0.005, 0], 30, { ouverture: 0.002 }), camDans(r, [-0.165, 0.02, 0.255], [-0.175, 0.005, 0], 30, { ouverture: 0.002 })),
     boites: [...monde(t, tf), annexe(t)].filter(Boolean),
   };
 };
@@ -731,7 +726,7 @@ P.P38 = (t, tf, pl) => ({
   boites: monde(t, tf, { plaques: ['A', 'B', 'C'], allumees: cascadeTouches(tf) }),
 });
 P.P39 = (t, tf, pl) => ({
-  cam: travelling(pl, t, cam([0.16, 0.26, 0.24], [0.08, 0.18, -0.08], 32, { ouverture: 0.003 }), cam([0.15, 0.25, 0.23], [0.08, 0.18, -0.08], 32, { ouverture: 0.003 })),
+  cam: travelling(pl, t, cam([0.26, 0.3, 0.34], [0.06, 0.17, -0.08], 34, { ouverture: 0.003 }), cam([0.25, 0.295, 0.33], [0.06, 0.17, -0.08], 34, { ouverture: 0.003 })),
   boites: monde(t, tf, { plaques: ['A', 'B', 'C'], allumees: ACCORD }),
 });
 P.P40 = (t, tf, pl) => ({
@@ -741,7 +736,7 @@ P.P40 = (t, tf, pl) => ({
 P.P41 = (t, tf, pl) => {
   const pb = posePlaque('B', t);
   const k = E.inout2(prog(pl.debut, pl.fin, t));
-  const y = mix(yLocal(310 + 114), yLocal(1125 + 114), k);
+  const y = mix(yLocal(310 + 114), yLocal(539 + 114), k);
   return {
     cam: { pos: point(pb, [0.12, y + 0.04, 0.26]), cible: point(pb, [0.02, y - 0.01, 0]), fov: 30, ouverture: 0.003 },
     boites: monde(t, tf, { plaques: ['A', 'B', 'C'], allumees: ACCORD }),
@@ -758,11 +753,13 @@ P.P43 = (t, tf, pl) => ({
   boites: monde(t, tf, { plaques: ['A', 'B', 'C'], allumees: ACCORD }),
 });
 P.P44 = (t, tf, pl) => {
-  const k = E.inout3(prog(pl.debut, pl.debut + 0.7, t));
-  const pos = lerp3([0.08, 1.15, 1.05], [1.3, 2.4, 13.2], k);
+  const k = E.inout3(prog(pl.debut, K.logo - 0.25, t));
   const f = poseFil(t).p;
+  const fin = add(LOGO_POS, [0.55, 0.3, 1.25]);
+  const pos = lerp3([0.08, 1.15, 1.05], fin, k);
+  const kf = E.inout2(prog(pl.debut, pl.debut + 0.45, t));
   return {
-    cam: { pos, cible: lerp3([0, 0.98, -0.42], f, clamp(k * 1.3)), fov: 36, ouverture: 0.003, focus: len(sub(f, pos)), roulis: -6 * k },
+    cam: { pos, cible: lerp3([0, 0.98, -0.42], f, kf), fov: 36, ouverture: 0.003, focus: len(sub(f, pos)), roulis: -6 * k },
     boites: monde(t, tf, { plaques: ['A', 'B', 'C'], allumees: ACCORD }),
   };
 };
