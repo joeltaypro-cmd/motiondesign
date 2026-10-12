@@ -775,6 +775,9 @@ P.P45 = (t, tf, pl) => {
   };
 };
 
+// exposition propre aux gros plans clairs (papier, mots tenus) : pas de plan beaucoup plus clair que ses voisins
+const EXPO = { P19: 0.78, P22: 0.62, P27: 0.78, P39: 0.68 };
+
 // passes supplémentaires pour les plans aux mouvements très rapides
 const PASSES = {
   P07: 1.25, P09: 1.25, P12: 1.4, P16: 1.25, P20: 1.25, P28: 1.25, P33: 1.25, P36: 1.25, P41: 1.4, P44: 1.6,
@@ -801,7 +804,7 @@ function scene(t, pl, tf = t) {
     spheres: s.spheres || [],
     lumieres: amb.lumieres,
     env: amb.env,
-    post: { exposition: s.sombre ? 0.95 : 1.0, halo: 0.32, vignette: 0.38, grain: 0.012, flash: [...hex(C.accent), fl] },
+    post: { exposition: EXPO[pl.id] ?? (s.sombre ? 0.95 : 1.0), halo: 0.32, vignette: 0.38, grain: 0.012, flash: [...hex(C.accent), fl] },
   };
 }
 
