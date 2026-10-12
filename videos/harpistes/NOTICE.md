@@ -5,6 +5,30 @@ seconde. Elle suit **Michaël, alternant**, de ses tutos vidéo en désordre jus
 l'École des harpistes. Cette leçon est le fil : elle reçoit trois gestes (Vue, Annexe, Exercice), se multiplie dans
 les modules, puis devient le H du logo.
 
+## Livraison (`livraison/`)
+
+| Fichier | Contenu |
+|---|---|
+| `lancement-ecole-des-harpistes-1080p60.mp4` | Le maître : H.264 High, 1920 × 1080, 60 i/s, 1 200 images, 20,000 s, 16,1 Mbit/s, son AAC 48 kHz 320 kbit/s (41,0 Mo) |
+| `lancement-ecole-des-harpistes-web-1080p60.mp4` | La version web : 1920 × 1080, 60 i/s, 20,000 s, 12,0 Mbit/s, son AAC 192 kbit/s (30,5 Mo) |
+| `lancement-ecole-des-harpistes-miniature-1920x1080.png` / `.jpg` | La miniature : le résultat à l'échelle, tenu (15,93 s, fin du 4e moment), rendue à 48 passes |
+| `lancement-ecole-des-harpistes-musique.wav` | La musique seule (WAV 24 bits, 48 kHz) |
+| `lancement-ecole-des-harpistes-mix.wav` | Le mix musique + bruitages (WAV 24 bits, 48 kHz) |
+| `lancement-ecole-des-harpistes-storyboard.png` | Le storyboard de la version livrée : une image par plan, tirée du maître, rangée par moment |
+
+### Contrôles de la version livrée (mesurés, pas vus en lecture ni écoutés)
+
+- Images : aucune image identique à la précédente ; les 44 coupes du conducteur tombent toutes deux images avant
+  leur temps (`tools/bin/coupes` + `tools/controle.py`) ; les autres sauts mesurés correspondent aux actions posées sur
+  les temps (impacts, allumages, éclairs) ; aucun plan n'est beaucoup plus clair que ses voisins après correction
+  (exposition propre aux gros plans de papier et de mots tenus : P19, P22, P27, P39).
+- Version web contre maître : SSIM moyen 0,995, PSNR moyen 45,4 dB (minimum 40,5 dB).
+- Son (mix) : −14,0 LUFS intégrés, crête vraie −1,8 dBFS ; montée −24,0 puis −21,6 LUFS (mesures 1 et 2) contre
+  −13,5 à −12,0 LUFS pour la chute et le résultat ; arrêt de 3,5 à 4 s et dernière image : silence complet (−∞) ;
+  les 42 coups de grosse caisse joués sont identiques à `K.frappes`.
+- Rendu : logiciel (SwiftShader, 4 cœurs, sans carte graphique), 8 passes par image en base (6 à 13 selon les plans,
+  au lieu des 24 de l'étalon, pour tenir le temps de calcul), environ 16 s par image.
+
 ## Où sont les choses
 
 | Chemin | Contenu |
